@@ -15,22 +15,6 @@ using Microsoft.Bot.Builder.Dialogs;
 
 namespace maduka_Robot.Controllers
 {
-    [Serializable]
-    public class EchoDialog : IDialog<object>
-    {
-        public async Task StartAsync(IDialogContext context)
-        {
-            context.Wait(MessageReceivedAsync);
-        }
-
-        public async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> argument)
-        {
-            var message = await argument;
-            await context.PostAsync("You said: " + message.Text);
-            context.Wait(MessageReceivedAsync);
-        }
-    }
-
     [BotAuthentication]
     public class MessagesController : ApiController
     {
@@ -42,6 +26,12 @@ namespace maduka_Robot.Controllers
             if (activity != null && activity.GetActivityType() == ActivityTypes.Message)
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+
+                // 處理回覆的內容
+                int length = (activity.Text ?? string.Empty).Length;
+                string strReply = $"你送入的文字是 {activity.Text} 這段文字長 {length} 個字元";
+
+                /* ----------有用到LUIS才需要打開這些部份----------
                 string strLuisKey = ConfigurationManager.AppSettings["LUISAPIKey"].ToString();
                 string strLuisAppId = ConfigurationManager.AppSettings["LUISAppId"].ToString();
                 string strMessage = HttpUtility.UrlEncode(activity.Text);
@@ -55,7 +45,7 @@ namespace maduka_Robot.Controllers
                 string json = reader.ReadToEnd();
                 CognitiveModels.LUISResult objLUISRes = JsonConvert.DeserializeObject<CognitiveModels.LUISResult>(json);
 
-                string strReply = "無法識別的內容";
+                strReply = "無法識別的內容";
 
                 if (objLUISRes.intents.Count > 0)
                 {
@@ -80,6 +70,7 @@ namespace maduka_Robot.Controllers
                         strReply = "您在說什麼，我聽不懂~~~(轉圈圈";
                     }
                 }
+                ---------- End LUIS ---------- */
 
                 Activity reply = activity.CreateReply(strReply);
                 await connector.Conversations.ReplyToActivityAsync(reply);
